@@ -13,6 +13,8 @@ from sklearn.preprocessing import OneHotEncoder,StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from scipy.stats import chi2_contingency
+from sklearn.preprocessing import LabelEncoder
+
 
 from src.utils import save_object
 
@@ -103,11 +105,19 @@ class DataTransformation():
             target_feature_test_df  = test_df[target_feature]
             
             logging.info('applying preprocessing on test and training input featuers')
-            input_feature_test_arr = preprocessing_obj.fit_transform(input_feature_test_df)
-            input_feature_train_arr =preprocessing_obj.fit_transform(input_feature_train_df)
-           
-            train_arr = np.c_[input_feature_train_arr,np.array(target_feature_train_df)]
-            test_arr = np.c_[input_feature_test_arr,np.array(target_feature_test_df)]
+            input_feature_train_arr = preprocessing_obj.fit_transform(input_feature_train_df)
+            input_feature_test_arr = preprocessing_obj.transform(input_feature_test_df)
+  
+            # Encode target labels
+            label_encoder = LabelEncoder()
+            target_feature_train_encoded = label_encoder.fit_transform(target_feature_train_df)
+            target_feature_test_encoded = label_encoder.transform(target_feature_test_df)
+
+        # Combine features with encoded target
+            train_arr = np.c_[input_feature_train_arr, target_feature_train_encoded]
+            test_arr = np.c_[input_feature_test_arr, target_feature_test_encoded]
+
+
             logging.info('Data now is preprocessed')
             save_object(file_path = self.dataTransformationConfig.preprocessing_file_path,obj=preprocessing_obj)
             return (train_arr,test_arr, self.dataTransformationConfig.preprocessing_file_path)
