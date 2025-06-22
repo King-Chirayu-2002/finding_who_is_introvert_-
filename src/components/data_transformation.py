@@ -29,30 +29,30 @@ def cramers_v(x, y):
     kcorr = k - ((k-1)**2)/(n-1)
     return np.sqrt(phi2corr / min((kcorr-1), (rcorr-1)))
 
-class DropRedundantCategorical(BaseEstimator, TransformerMixin):
-    def __init__(self, threshold=0.9):
-        self.threshold = threshold
-        self.to_drop = []
+# class DropRedundantCategorical(BaseEstimator, TransformerMixin):
+#     def __init__(self, threshold=0.9):
+#         self.threshold = threshold
+#         self.to_drop = []
 
-    def fit(self, X, y=None):
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
+#     def fit(self, X, y=None):
+#         if not isinstance(X, pd.DataFrame):
+#             X = pd.DataFrame(X)
 
-        cols = X.columns
-        n = len(cols)
-        to_drop = set()
+#         cols = X.columns
+#         n = len(cols)
+#         to_drop = set()
 
-        for i in range(n):
-            for j in range(i + 1, n):
-                v = cramers_v(X[cols[i]], X[cols[j]])
-                if v > self.threshold:
-                    to_drop.add(cols[j])  # drop the later feature
+#         for i in range(n):
+#             for j in range(i + 1, n):
+#                 v = cramers_v(X[cols[i]], X[cols[j]])
+#                 if v > self.threshold:
+#                     to_drop.add(cols[j])  # drop the later feature
 
-        self.to_drop = list(to_drop)
-        return self
+#         self.to_drop = list(to_drop)
+#         return self
 
-    def transform(self, X):
-        return X.drop(columns=self.to_drop)
+#     def transform(self, X):
+#         return X.drop(columns=self.to_drop)
 
 @dataclass
 class DataTransformationConfig:
@@ -75,8 +75,7 @@ class DataTransformation():
             )
             cat_pipeline= Pipeline(
                 steps=[
-                   ('drop_redundant', DropRedundantCategorical(threshold=0.9)),
-                   ('encoding', OneHotEncoder()) 
+                   ('encoding', OneHotEncoder(drop='first')) 
                 ]
             )
             preprocessor  = ColumnTransformer(

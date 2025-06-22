@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Introvert Personality Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: radial-gradient(circle, #b2fefa, #0ed2f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 10s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { background: radial-gradient(circle, #b2fefa, #0ed2f7); }
+      100% { background: radial-gradient(circle, #ffecd2, #fcb69f); }
+    }
+
+    #app {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      transition: all 0.4s;
+    }
+
+    .question {
+      font-size: 1.6em;
+      margin-bottom: 30px;
+      color: #444;
+      animation: fadeIn 0.5s;
+    }
+
+    .options, .range-control {
+      animation: fadeIn 0.5s;
+    }
+
+    button {
+      padding: 14px 28px;
+      margin: 10px;
+      font-size: 1em;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      background-image: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .range-label {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 14px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      outline: none;
+      margin-bottom: 20px;
+      transition: background 0.3s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #0072ff;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    ul {
+      list-style: none;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    ul li {
+      margin: 10px 0;
+      font-size: 1em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="intro">
+      <div class="question">Do you want to check if you're an introvert?</div>
+      <div class="options">
+        <button onclick="startQuiz()">Yes</button>
+        <button>No</button>
+      </div>
+    </div>
+
+    <div id="question-box" style="display:none;"></div>
+  </div>
+
+  <script>
+    const questions = [
+      { key: 'Time_spent_Alone', text: "On a scale of 0 to 10, how much time do you spend alone?", type: 'range' },
+      { key: 'Stage_fear', text: "Do you have stage fear?", type: 'yesno' },
+      { key: 'Social_event_attendance', text: "How often do you attend social events? (0 to 10)", type: 'range' },
+      { key: 'Going_outside', text: "How often do you go outside? (0 to 10)", type: 'range' },
+      { key: 'Drained_after_socializing', text: "Do you feel drained after socializing?", type: 'yesno' },
+      { key: 'Friends_circle_size', text: "How big is your friend circle? (0 to 10)", type: 'range' },
+      { key: 'Post_frequency', text: "How often do you post on social media? (0 to 10)", type: 'range' }
+    ];
+
+    let current = 0;
+    let answers = {};
+
+    function startQuiz() {
+      document.getElementById('intro').style.display = 'none';
+      document.getElementById('question-box').style.display = 'block';
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = questions[current];
+      const box = document.getElementById('question-box');
+
+      let html = `<div class="question">${q.text}</div>`;
+
+      if (q.type === 'range') {
+        html += `
+          <div class="range-control">
+            <div class="range-label">Value: <span id="rangeValue">5</span></div>
+            <input type="range" min="0" max="10" value="5" id="rangeSlider" oninput="document.getElementById('rangeValue').innerText = this.value">
+            <button onclick="submitAnswer(document.getElementById('rangeSlider').value)">Next</button>
+          </div>`;
+      } else if (q.type === 'yesno') {
+        html += `
+          <div class="options">
+            <button onclick="submitAnswer('Yes')">Yes</button>
+            <button onclick="submitAnswer('No')">No</button>
+          </div>`;
+      }
+
+      box.innerHTML = html;
+    }
+
+    function submitAnswer(answer) {
+      answers[questions[current].key] = answer;
+      current++;
+      if (current < questions.length) {
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+  const box = document.getElementById('question-box');
+
+  // Send data to backend
+  fetch("/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(answers), // send the 'answers' object
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      // Display prediction result from backend
+      box.innerHTML = `
+        <div class="question">Thank you! Here's a summary:</div>
+        <ul>
+          ${Object.entries(answers).map(
+            ([key, value]) =>
+              `<li><strong>${key.replace(/_/g, ' ')}:</strong> ${value}</li>`
+          ).join('')}
+        </ul>
+        <div><strong>Predicted Result:</strong> ${data.result}</div>
+      `;
+    })
+    .catch((error) => {
+      box.innerHTML = `<p>Error submitting answers. Please try again later.</p>`;
+      console.error("Error:", error);
+    });
+}
+
+  </script>
+</body>
+</html>
